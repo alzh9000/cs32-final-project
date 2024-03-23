@@ -1,1 +1,11 @@
-# cs32-final-project
+# UltraMac
+## Description
+For my final project, I am building UltraMac, an upgraded version of an online speed math game/quizzer called ZetaMac. UltraMac is similarly designed to be a speed-focused math game that tests your quick mental math calculation skills on a variety of addition, multiplication, subtraction, division, and exponentiation problems. It is built to be run locally using Python and Tkinter. The game generates random arithmetic problems to be solved (all with integer numbers and integer solutions), and a player's score is the number of problems that they solve. 
+
+## Goals and motivation
+Even building just the original ZetaMac game in Python would already be a good challenge for such a final project, consisting of more work than any of our existing psets, especially since it would require one to learn how to use a GUI library like Tkinter. Beyond that, I also want to upgrade UltraMac compared to the original ZetaMac game by making it a better-single player version with more options/customizability for the problems and tracking of scores over time. For example, the original ZetaMac game does not have exponentiation problems, and it also does not have compound problems (original ZetaMac never combines two arithmetic operations, like adding then multiplying, etc.). The original ZetaMac game also does not have a way to track your scores over time, so I will add that feature to UltraMac by letting users input usernames and storing their scores in a file over time. This is useful for users to help track their scores over time and see if they are improving, since the goal of UltraMac (and also ZetaMac) is to help train people's mental math abilities, which is useful for a variety of goals, such as to perform better in certain finance or quant job interviews where they ask you to do speed math. 
+
+# Credits
+Check out the original ZetaMac game [here](https://arithmetic.zetamac.com/). I was inspired to build UltraMac after playing ZetaMac and being frustrated that my progress was not being tracked, so it was hard to tell how much I was improving (or rusting, haha). 
+
+Thanks for looking at my project! Huge shout-out to the CS 32 teaching team for all their support. :D 
