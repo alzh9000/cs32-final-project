@@ -3,6 +3,10 @@ import random
 import tkinter as tk
 from tkinter import simpledialog
 import numpy as np
+import pandas as pd
+
+# Location to save score history
+scores_folder = "./data"
 
 
 class UltraMac:
@@ -12,13 +16,15 @@ class UltraMac:
         self.font_size = font_size
         self.game_root = game_root
         self.username = username
-        self.time_limit = time_limit # in seconds
-        
+        self.time_limit = time_limit  # in seconds
+
         # Create UI elements with padding to look pretty
         self.game_root.title("UltraMac")
         self.game_root.geometry("400x300")
         self.label_timer = tk.Label(
-            self.game_root, text=f"Time: {self.time_limit}", font=(self.font, self.font_size)
+            self.game_root,
+            text=f"Time: {self.time_limit}",
+            font=(self.font, self.font_size),
         )
         self.label_timer.pack(pady=5)
         self.label_score = tk.Label(
@@ -28,14 +34,14 @@ class UltraMac:
         self.button_start = tk.Button(
             self.game_root,
             text="Start Game",
-            command=self.start_game, # Start game once start button is pressed
+            command=self.start_game,  # Start game once start button is pressed
             font=(self.font, self.font_size),
         )
         self.button_start.pack(pady=10)
         self.button_start.bind("<Return>", self.start_game)
         self.button_start.focus_set()
 
-    def start_game(self, event = None):
+    def start_game(self, event=None):
         self.end_time = datetime.now() + timedelta(seconds=self.time_limit)
         self.score = 0
         # TODO implement more complex game logic for scoring, maybe based on problem difficulty
@@ -54,17 +60,7 @@ class UltraMac:
         self.entry_answer.pack(pady=5)
         self.entry_answer.focus_set()
         # Start timer
-        self.game_root.after(1000, self.check_timer) 
-    
-    def check_timer(self):
-        # Check if time is up every second: if so, end game and print results, otherwise keep checking
-        if datetime.now() < self.end_time:
-            self.game_root.after(1000, self.check_timer)
-        else:
-            self.label_question.config(text="Game Over!")
-            self.entry_answer.destroy()
-            self.label_timer.config(text="Time's up!")
-            self.label_score.config(text=f"Final score: {self.score}")
+        self.game_root.after(1000, self.check_timer)
 
     def update_problem(self):
         # Update the problem in the UI
@@ -126,6 +122,38 @@ class UltraMac:
             self.label_score.config(text=f"Score: {self.score}")
         self.update_problem()
         self.entry_answer.delete(0, tk.END)
+
+    def check_timer(self):
+        # Check if time is up every second: if so, end game then show and save results, otherwise keep checking
+        if datetime.now() < self.end_time:
+            self.game_root.after(1000, self.check_timer)
+        else:
+            self.label_question.config(text="Game Over!")
+            self.entry_answer.destroy()
+            self.label_timer.config(text="Time's up!")
+            self.label_score.config(text=f"Final score: {self.score}")
+
+            self.save_score()
+
+    def save_score(self):
+        current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Check if username exists already in scores folder to load previous scores, if not, create new file to track scores
+        score_file = f"{scores_folder}/{self.username}.csv"
+        try:
+            scores = pd.read_csv(score_file)
+        except FileNotFoundError:
+            scores = pd.DataFrame(columns=["Username", "DateTime", "Score"])
+
+        # Append new score data and save updated scores to CSV
+        new_score = {
+            "Username": self.username,
+            "DateTime": current_timestamp,
+            "Score": self.score,
+        }
+        scores = pd.concat(
+            [scores, pd.DataFrame(new_score, index=[0])], ignore_index=True
+        )
+        scores.to_csv(score_file, index=False)
 
 
 def launch_game():
