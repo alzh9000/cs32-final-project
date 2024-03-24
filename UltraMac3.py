@@ -20,7 +20,7 @@ class UltraMac:
 
         # Create UI elements with padding to look pretty
         self.game_root.title("UltraMac")
-        self.game_root.geometry("400x300")
+        self.game_root.geometry("400x500")
         self.label_timer = tk.Label(
             self.game_root,
             text=f"Time: {self.time_limit}",
@@ -28,7 +28,7 @@ class UltraMac:
         )
         self.label_timer.pack(pady=5)
         self.label_score = tk.Label(
-            self.game_root, text="Score: 0", font=(self.font, self.font_size)
+            self.game_root, text="Score: 0", font=(self.font, self.font_size), fg="red"
         )
         self.label_score.pack(pady=5)
         self.button_start = tk.Button(
@@ -154,6 +154,55 @@ class UltraMac:
             [scores, pd.DataFrame(new_score, index=[0])], ignore_index=True
         )
         scores.to_csv(score_file, index=False)
+
+        self.display_scores(scores)
+
+    def display_scores(self, scores):
+        # For this user, display their 5 most recent scores, if available, and their top 5 scores of all time, if available in the UI
+        self.label_recent_scores = tk.Label(
+            self.game_root, text="Recent Scores:", font=(self.font, self.font_size)
+        )
+        self.label_recent_scores.pack(pady=5)
+        # Get most recent scores from user's Dataframe and display them as rows in blue in the UI
+        recent_scores = (
+            scores[scores["Username"] == self.username]
+            .sort_values(by="DateTime", ascending=False)
+            .head(5)
+        )
+        recent_scores_str = "\n".join(
+            [
+                f"{row['DateTime']}: {row['Score']}"
+                for _, row in recent_scores.iterrows()
+            ]
+        )
+        self.label_recent_scores_values = tk.Label(
+            self.game_root,
+            text=recent_scores_str,
+            font=(self.font, self.font_size),
+            fg="blue",
+        )
+        self.label_recent_scores_values.pack(pady=5)
+
+        self.label_top_scores = tk.Label(
+            self.game_root, text="Top Scores:", font=(self.font, self.font_size)
+        )
+        self.label_top_scores.pack(pady=5)
+        # Get highest scores from user's Dataframe and display them as rows in blue in the UI
+        top_scores = (
+            scores[scores["Username"] == self.username]
+            .sort_values(by="Score", ascending=False)
+            .head(5)
+        )
+        top_scores_str = "\n".join(
+            [f"{row['DateTime']}: {row['Score']}" for _, row in top_scores.iterrows()]
+        )
+        self.label_top_scores_values = tk.Label(
+            self.game_root,
+            text=top_scores_str,
+            font=(self.font, self.font_size),
+            fg="green",
+        )
+        self.label_top_scores_values.pack(pady=5)
 
 
 def launch_game():
