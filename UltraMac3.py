@@ -6,7 +6,7 @@ import numpy as np
 
 
 class UltraMac:
-    def __init__(self, username, game_root, font="Arial", font_size=16, time_limit=120):
+    def __init__(self, username, game_root, font="Arial", font_size=20, time_limit=5):
         # TODO Store scores and user data using username
         self.font = font
         self.font_size = font_size
@@ -16,7 +16,7 @@ class UltraMac:
         
         # Create UI elements with padding to look pretty
         self.game_root.title("UltraMac")
-        self.game_root.geometry("800x600")
+        self.game_root.geometry("400x300")
         self.label_timer = tk.Label(
             self.game_root, text=f"Time: {self.time_limit}", font=(self.font, self.font_size)
         )
@@ -32,8 +32,10 @@ class UltraMac:
             font=(self.font, self.font_size),
         )
         self.button_start.pack(pady=10)
+        self.button_start.bind("<Return>", self.start_game)
+        self.button_start.focus_set()
 
-    def start_game(self):
+    def start_game(self, event = None):
         self.end_time = datetime.now() + timedelta(seconds=self.time_limit)
         self.score = 0
         # TODO implement more complex game logic for scoring, maybe based on problem difficulty
@@ -44,12 +46,28 @@ class UltraMac:
             self.game_root, text="Solve: ", font=(self.font, self.font_size)
         )
         self.label_question.pack(pady=5)
+        # Load first problem into UI
         self.update_problem()
         self.entry_answer = tk.Entry(self.game_root, font=(self.font, self.font_size))
         self.entry_answer.pack(pady=5)
         self.entry_answer.bind("<Return>", self.check_answer)
+        self.entry_answer.pack(pady=5)
+        self.entry_answer.focus_set()
+        # Start timer
+        self.game_root.after(1000, self.check_timer) 
+    
+    def check_timer(self):
+        # Check if time is up every second: if so, end game and print results, otherwise keep checking
+        if datetime.now() < self.end_time:
+            self.game_root.after(1000, self.check_timer)
+        else:
+            self.label_question.config(text="Game Over!")
+            self.entry_answer.destroy()
+            self.label_timer.config(text="Time's up!")
+            self.label_score.config(text=f"Final score: {self.score}")
 
     def update_problem(self):
+        # Update the problem in the UI
         self.label_timer.config(
             text=f"Time: {(self.end_time - datetime.now()).seconds}"
         )
@@ -57,6 +75,7 @@ class UltraMac:
         self.label_question.config(text=f"Solve: {self.problem_string}")
 
     def generate_problem(self):
+        # Generate a random quick math problem
         problem_types = [
             "addition",
             "subtraction",
@@ -97,6 +116,7 @@ class UltraMac:
         return problem_string, solution
 
     def check_answer(self, event=None):
+        # Check user's answer, then update score and question
         self.label_timer.config(
             text=f"Time: {(self.end_time - datetime.now()).seconds}"
         )
@@ -108,7 +128,7 @@ class UltraMac:
         self.entry_answer.delete(0, tk.END)
 
 
-def launch_game() -> None:
+def launch_game():
     root = tk.Tk()
     root.withdraw()  # This hides the root window, which is kind of ugly - we use simpledialog instead
     username = simpledialog.askstring(
