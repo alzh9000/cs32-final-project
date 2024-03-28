@@ -11,7 +11,7 @@ scores_folder = "./data"
 
 class UltraMac:
     def __init__(self, username, game_root, font="Arial", font_size=20, time_limit=5):
-        # TODO Store scores and user data using username
+        # Store scores and user data using username
         self.font = font
         self.font_size = font_size
         self.game_root = game_root
@@ -79,24 +79,26 @@ class UltraMac:
             "division",
             "exponentiation",
         ]
+        lower_bound = 2
+        upper_bound = 36
         # TODO: include compound problems
         problem_type = random.choice(problem_types)
         if problem_type == "addition":
-            x, y = np.random.randint(low=2, high=100, size=2)
+            x, y = np.random.randint(low=lower_bound, high=upper_bound, size=2)
             solution = x + y
             problem_string = f"{x} + {y} = "
         elif problem_type == "subtraction":
             x, y = sorted(
-                np.random.randint(2, 100, size=2), reverse=True
+                np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse=True
             )  # Ensure non-negative result
             solution = x - y
             problem_string = f"{x} - {y} = "
         elif problem_type == "multiplication":
-            x, y = np.random.randint(low=2, high=20, size=2)
+            x, y = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
             solution = x * y
             problem_string = f"{x} x {y} = "
         elif problem_type == "division":
-            x, y = np.random.randint(2, 20, size=2)
+            x, y = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
             x *= y  # Ensure integer result
             solution = x // y
             problem_string = f"{x} / {y} = "
