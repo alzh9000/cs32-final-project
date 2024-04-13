@@ -11,8 +11,8 @@ scores_folder = "./data"
 
 
 class UltraMac:
-    # Time limit is in seconds, set to 10 for faster testing, normally set to 120 for players
-    def __init__(self, username, game_root, font="Arial", font_size=20, time_limit=10):
+    # Time limit is in seconds, set to 20 for faster testing, normally set to 120 for players
+    def __init__(self, username, game_root, font="Arial", font_size=20, time_limit=20):
         # Store scores and user data using username
         self.font = font
         self.font_size = font_size
@@ -68,17 +68,17 @@ class UltraMac:
         self.label_timer.config(
             text=f"Time: {(self.end_time - datetime.now()).seconds}"
         )
-        self.problem_string, self.solution = self.generate_problem()
+        self.problem_string, self.solution, self.problem_score = self.generate_problem()
         self.label_question.config(text=f"Solve: {self.problem_string}")
 
     def generate_problem(self):
         # Generate a random quick math problem
         # Compound problems consist of multiple operations, which is not a feature that ZetaMac includes. So, this is a signfiicant upgrade we did, since it allows for substantially more challenging mental math (while each individual operation should still be simple enough to do in one's head).
         # The base problems (consisting of just one operation) are designed to be approximately of similar difficulty in terms of mental math, so that they are all worth the same score. We do this by adjusting the upper bounds of the random numbers that are generated for each operation so that the difficulty is similar. Ex: Addition has a larger upper bound than multiplication, since multiplication is more difficult. Similarly, exponentiation has a smaller upper bound than multiplication, since exponentiation is more difficult.
-        # TODO: We reward a higher score for compound problems, since they are more difficult.
+        # We reward a higher score for compound problems, since they are more difficult. We increase score by one for each operation in the compound problem. So, a compound problem with 3 operations is worth 3 points, and a compound problem with 2 operations is worth 2 points.
         # For all the problems that involve subtraction, we want to ensure that the result is non-negative. So, we sometimes sort the numbers in descending order so smaller number gets subtracted from bigger number. Other times, we set the upper bound to be whatever the expression is that we are subtracting from.
         # For division, we want to ensure that the result is an integer, so we multiply two numbers together to get a bigger number that is for sure divisible by the second number. The logic behind ensuring that the result is an integer is tricky, so we do not include division when creating compound problems.
-        # We also do not include exponentiation when creating compound problems because they are generally infeasible to solve using mental math.
+        # We also do not include exponentiation when creating compound problems because they would be generally infeasible to solve using mental math in compound problems.
         problem_types = [
             "addition",
             "subtraction",
@@ -275,7 +275,7 @@ class UltraMac:
         elif problem_type == "compound_subtract_then_multiply_then_subtract":
             x, y = sorted(
                 np.random.randint(low=lower_bound, high=upper_bound, size=2),
-                reverse=True
+                reverse=True,
             )
             x = y + 1
             z = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
@@ -376,11 +376,12 @@ class UltraMac:
             raise ValueError(f"Invalid problem type: {problem_type}")
 
         score = 1  # Base score for each problem
+        # We reward a higher score for compound problems, since they are more difficult. We increase score by one for each operation in the compound problem. So, a compound problem with 3 operations is worth 3 points, and a compound problem with 2 operations is worth 2 points.
         if problem_type.count("then") == 2:
             score = 3
         elif problem_type.count("then") == 1:
             score = 2
-        
+
         return problem_string, int(solution), score
 
     def check_answer(self, event=None):
@@ -390,8 +391,7 @@ class UltraMac:
         )
         user_solution = self.entry_answer.get()
         if user_solution == str(self.solution):
-            # TODO implement more complex game logic for scoring, maybe based on problem difficulty
-            self.score += 1
+            self.score += self.problem_score
             self.label_score.config(text=f"Score: {self.score}")
         self.update_problem()
         self.entry_answer.delete(0, tk.END)
@@ -492,6 +492,7 @@ def launch_game():
     else:
         print("You must provide a username. No username provided, so exiting.")
 
+
 # Use unittest to test generate_problem method, specifically making sure that the solution is always a non-negative integer
 class TestGenerateProblem(unittest.TestCase):
     def setUp(self):
@@ -499,7 +500,7 @@ class TestGenerateProblem(unittest.TestCase):
         self.ultra_mac = UltraMac(username="tester", game_root=game_root)
 
     def test_generate_problem(self):
-        for _ in range(10000): 
+        for _ in range(10000):
             _, solution, _ = self.ultra_mac.generate_problem()
             self.assertGreaterEqual(solution, 0, "Solution is negative")
             self.assertIsInstance(solution, int, "Solution is not an integer")
@@ -507,5 +508,5 @@ class TestGenerateProblem(unittest.TestCase):
 
 if __name__ == "__main__":
     # used just for testing generate_problem method
-    unittest.main()
-    # launch_game()
+    # unittest.main()
+    launch_game()
