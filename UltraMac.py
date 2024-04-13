@@ -10,7 +10,8 @@ scores_folder = "./data"
 
 
 class UltraMac:
-    def __init__(self, username, game_root, font="Arial", font_size=20, time_limit=5):
+    # Time limit is in seconds, set to 10 for faster testing, normally set to 120 for players
+    def __init__(self, username, game_root, font="Arial", font_size=20, time_limit=10):
         # Store scores and user data using username
         self.font = font
         self.font_size = font_size
@@ -44,7 +45,6 @@ class UltraMac:
     def start_game(self, event=None):
         self.end_time = datetime.now() + timedelta(seconds=self.time_limit)
         self.score = 0
-        # TODO implement more complex game logic for scoring, maybe based on problem difficulty
         # Update UI now that game is starting
         self.label_timer.config(text=f"Time: {self.time_limit}")
         self.button_start.destroy()
@@ -204,8 +204,7 @@ class UltraMac:
             solution = ((x - y) + z) * w
             problem_string = f"(({x} - {y}) + {z}) x {w} = "
         elif problem_type == "compound_add_then_add_then_subtract":
-            x, y, z  = np.random.randint(low=lower_bound, high=upper_bound, size=3)
-            w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
+            x, y, z, w  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=4), reverse = True)
             solution = (x + y) + (z - w)
             problem_string = f"({x} + {y}) + ({z} - {w}) = "
         elif problem_type == "compound_subtract_then_add_then_add":
@@ -245,7 +244,7 @@ class UltraMac:
         elif problem_type == "compound_subtract_then_multiply_then_subtract":
             x, y  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse = True)
             z = np.random.randint(low=lower_bound, high=x - y, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            w = np.random.randint(low=lower_bound, high=(x - y) * z, size=1)[0]
             solution = ((x - y) * z) - w
             problem_string = f"(({x} - {y}) x {z}) - {w} = "
         elif problem_type == "compound_add_then_multiply_then_add":
@@ -257,7 +256,7 @@ class UltraMac:
         elif problem_type == "compound_add_then_multiply_then_subtract":
             x, y  = np.random.randint(low=lower_bound, high=upper_bound, size=2)
             z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
+            w = np.random.randint(low=lower_bound, high=(x + y) * z, size=1)[0]
             solution = ((x + y) * z) - w
             problem_string = f"(({x} + {y}) x {z}) - {w} = "
         elif problem_type == "compound_add_then_subtract_then_multiply":
@@ -301,7 +300,7 @@ class UltraMac:
             problem_string = f"(({x} - {y}) + {z}) x {w} = "
         elif problem_type == "compound_subtract_then_add_then_subtract":
             x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
-            w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
+            w = np.random.randint(low=lower_bound, high=(x - y) + z, size=1)[0]
             solution = ((x - y) + z) - w
             problem_string = f"(({x} - {y}) + {z}) - {w} = "
         elif problem_type == "compound_subtract_then_multiply_then_add":
@@ -313,7 +312,7 @@ class UltraMac:
         elif problem_type == "compound_subtract_then_multiply_then_subtract":
             x, y  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse = True)
             z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
+            w = np.random.randint(low=lower_bound, high=(x - y) * z, size=1)[0]
             solution = ((x - y) * z) - w
             problem_string = f"(({x} - {y}) x {z}) - {w} = "
         else:
@@ -328,6 +327,7 @@ class UltraMac:
         )
         user_solution = self.entry_answer.get()
         if user_solution == str(self.solution):
+        # TODO implement more complex game logic for scoring, maybe based on problem difficulty
             self.score += 1
             self.label_score.config(text=f"Score: {self.score}")
         self.update_problem()
