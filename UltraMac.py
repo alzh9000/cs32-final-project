@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import simpledialog
 import numpy as np
 import pandas as pd
+import unittest
 
 # Location to save score history
 scores_folder = "./data"
@@ -72,12 +73,12 @@ class UltraMac:
 
     def generate_problem(self):
         # Generate a random quick math problem
-        # Compound problems consist of multiple operations, which is not a feature that ZetaMac includes. So, this is a signfiicant upgrade we did, since it allows for substantially more challenging mental math (while each individual operation should still be simple enough to do in one's head). 
+        # Compound problems consist of multiple operations, which is not a feature that ZetaMac includes. So, this is a signfiicant upgrade we did, since it allows for substantially more challenging mental math (while each individual operation should still be simple enough to do in one's head).
         # The base problems (consisting of just one operation) are designed to be approximately of similar difficulty in terms of mental math, so that they are all worth the same score. We do this by adjusting the upper bounds of the random numbers that are generated for each operation so that the difficulty is similar. Ex: Addition has a larger upper bound than multiplication, since multiplication is more difficult. Similarly, exponentiation has a smaller upper bound than multiplication, since exponentiation is more difficult.
         # TODO: We reward a higher score for compound problems, since they are more difficult.
         # For all the problems that involve subtraction, we want to ensure that the result is non-negative. So, we sometimes sort the numbers in descending order so smaller number gets subtracted from bigger number. Other times, we set the upper bound to be whatever the expression is that we are subtracting from.
         # For division, we want to ensure that the result is an integer, so we multiply two numbers together to get a bigger number that is for sure divisible by the second number. The logic behind ensuring that the result is an integer is tricky, so we do not include division when creating compound problems.
-        # We also do not include exponentiation when creating compound problems because they are generally infeasible to solve using mental math. 
+        # We also do not include exponentiation when creating compound problems because they are generally infeasible to solve using mental math.
         problem_types = [
             "addition",
             "subtraction",
@@ -117,7 +118,7 @@ class UltraMac:
             "compound_subtract_then_multiply_then_add",
             "compound_subtract_then_multiply_then_subtract",
         ]
-        lower_bound = 2
+        lower_bound = 1
         upper_bound = 36
         problem_type = random.choice(problem_types)
         if problem_type == "addition":
@@ -126,16 +127,17 @@ class UltraMac:
             problem_string = f"{x} + {y} = "
         elif problem_type == "subtraction":
             x, y = sorted(
-                np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse=True
+                np.random.randint(low=lower_bound, high=upper_bound, size=2),
+                reverse=True,
             )  # Ensure non-negative result
             solution = x - y
             problem_string = f"{x} - {y} = "
         elif problem_type == "multiplication":
-            x, y = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
             solution = x * y
             problem_string = f"{x} x {y} = "
         elif problem_type == "division":
-            x, y = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
+            x, y = np.random.randint(low=1, high=upper_bound // 3, size=2)
             x *= y  # Ensure integer result
             solution = x // y
             problem_string = f"{x} / {y} = "
@@ -148,177 +150,238 @@ class UltraMac:
             solution = x**y
             problem_string = f"{x} ^ {y} = "
         elif problem_type == "compound_add_then_multiply":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound, size=2)
-            z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y = np.random.randint(low=lower_bound, high=upper_bound, size=2)
+            z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = (x + y) * z
             problem_string = f"({x} + {y}) x {z} = "
         elif problem_type == "compound_multiply_then_add":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
             z = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = (x * y) + z
             problem_string = f"({x} x {y}) + {z} = "
         elif problem_type == "compound_add_then_subtract":
-            x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
+            x, y, z = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=3),
+                reverse=True,
+            )
             solution = (x + y) - z
             problem_string = f"({x} + {y}) - {z} = "
         elif problem_type == "compound_subtract_then_add":
-            x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
+            x, y, z = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=3),
+                reverse=True,
+            )
+            x = y + 1
             solution = (x - y) + z
             problem_string = f"({x} - {y}) + {z} = "
         elif problem_type == "compound_subtract_then_multiply":
-            x, y  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse = True)
-            z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=2),
+                reverse=True,
+            )
+            x = y + 1
+            z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = (x - y) * z
             problem_string = f"({x} - {y}) x {z} = "
         elif problem_type == "compound_multiply_then_subtract":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
-            z = np.random.randint(low=lower_bound, high=x * y, size=1)[0]
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
+            z = np.random.randint(low=0, high=x * y, size=1)[0]
             solution = (x * y) - z
             problem_string = f"({x} x {y}) - {z} = "
         elif problem_type == "compound_add_then_add":
-            x, y, z  = np.random.randint(low=lower_bound, high=upper_bound, size=3)
+            x, y, z = np.random.randint(low=lower_bound, high=upper_bound, size=3)
             solution = (x + y) + z
             problem_string = f"({x} + {y}) + {z} = "
         elif problem_type == "compound_multiply_then_multiply":
-            x, y, z  = np.random.randint(low=lower_bound, high=upper_bound//3, size=3)
+            x, y, z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=3)
             solution = (x * y) * z
             problem_string = f"({x} x {y}) x {z} = "
         elif problem_type == "compound_add_then_add_then_add":
-            x, y, z  = np.random.randint(low=lower_bound, high=upper_bound, size=3)
+            x, y, z = np.random.randint(low=lower_bound, high=upper_bound, size=3)
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = (x + y) + (z + w)
             problem_string = f"({x} + {y}) + ({z} + {w}) = "
         elif problem_type == "compound_multiply_then_multiply_then_multiply":
-            x, y, z  = np.random.randint(low=lower_bound, high=upper_bound//3, size=3)
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y, z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=3)
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = (x * y) * (z * w)
             problem_string = f"({x} x {y}) x ({z} x {w}) = "
         elif problem_type == "compound_add_then_subtract_then_multiply":
-            x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y, z = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=3),
+                reverse=True,
+            )
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = ((x + y) - z) * w
             problem_string = f"(({x} + {y}) - {z}) x {w} = "
         elif problem_type == "compound_subtract_then_add_then_multiply":
-            x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y, z = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=3),
+                reverse=True,
+            )
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = ((x - y) + z) * w
             problem_string = f"(({x} - {y}) + {z}) x {w} = "
         elif problem_type == "compound_add_then_add_then_subtract":
-            x, y, z, w  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=4), reverse = True)
+            x, y, z, w = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=4),
+                reverse=True,
+            )
             solution = (x + y) + (z - w)
             problem_string = f"({x} + {y}) + ({z} - {w}) = "
         elif problem_type == "compound_subtract_then_add_then_add":
-            x, y, z  = np.random.randint(low=lower_bound, high=upper_bound, size=3)
+            x, y, z = np.random.randint(low=lower_bound, high=upper_bound, size=3)
+            x = y + 1
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = (x - y) + (z + w)
             problem_string = f"({x} - {y}) + ({z} + {w}) = "
         elif problem_type == "compound_subtract_then_multiply_then_add":
-            x, y  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse = True)
-            z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=2),
+                reverse=True,
+            )
+            x = y + 1
+            z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = ((x - y) * z) + w
             problem_string = f"(({x} - {y}) x {z}) + {w} = "
         elif problem_type == "compound_multiply_then_subtract_then_add":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
-            z = np.random.randint(low=lower_bound, high=x * y, size=1)[0]
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
+            z = np.random.randint(low=0, high=x * y, size=1)[0]
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = ((x * y) - z) + w
             problem_string = f"(({x} x {y}) - {z}) + {w} = "
         elif problem_type == "compound_multiply_then_multiply_then_subtract":
-            x, y, z  = np.random.randint(low=lower_bound, high=upper_bound//3, size=3)
-            w = np.random.randint(low=lower_bound, high=(x * y) * z, size=1)[0]
+            x, y, z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=3)
+            w = np.random.randint(low=0, high=(x * y) * z, size=1)[0]
             solution = ((x * y) * z) - w
             problem_string = f"(({x} x {y}) x {z}) - {w} = "
         elif problem_type == "compound_multiply_then_subtract_then_multiply":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
-            z = np.random.randint(low=lower_bound, high=x * y, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
+            z = np.random.randint(low=0, high=x * y, size=1)[0]
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = ((x * y) - z) * w
             problem_string = f"(({x} x {y}) - {z}) x {w} = "
         elif problem_type == "compound_subtract_then_multiply_then_multiply":
-            x, y  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse = True)
-            z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=2),
+                reverse=True,
+            )
+            x = y + 1
+            z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = ((x - y) * z) * w
             problem_string = f"(({x} - {y}) x {z}) x {w} = "
         elif problem_type == "compound_subtract_then_multiply_then_subtract":
-            x, y  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse = True)
-            z = np.random.randint(low=lower_bound, high=x - y, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=(x - y) * z, size=1)[0]
+            x, y = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=2),
+                reverse=True
+            )
+            x = y + 1
+            z = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
+            w = np.random.randint(low=0, high=(x - y) * z, size=1)[0]
             solution = ((x - y) * z) - w
             problem_string = f"(({x} - {y}) x {z}) - {w} = "
         elif problem_type == "compound_add_then_multiply_then_add":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound, size=2)
-            z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y = np.random.randint(low=lower_bound, high=upper_bound, size=2)
+            z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = ((x + y) * z) + w
             problem_string = f"(({x} + {y}) x {z}) + {w} = "
         elif problem_type == "compound_add_then_multiply_then_subtract":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound, size=2)
-            z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=(x + y) * z, size=1)[0]
+            x, y = np.random.randint(low=lower_bound, high=upper_bound, size=2)
+            z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
+            w = np.random.randint(low=0, high=(x + y) * z, size=1)[0]
             solution = ((x + y) * z) - w
             problem_string = f"(({x} + {y}) x {z}) - {w} = "
         elif problem_type == "compound_add_then_subtract_then_multiply":
-            x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y, z = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=3),
+                reverse=True,
+            )
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = ((x + y) - z) * w
             problem_string = f"(({x} + {y}) - {z}) x {w} = "
         elif problem_type == "compound_add_then_subtract_then_add":
-            x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
+            x, y, z = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=3),
+                reverse=True,
+            )
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = ((x + y) - z) + w
             problem_string = f"(({x} + {y}) - {z}) + {w} = "
         elif problem_type == "compound_multiply_then_add_then_multiply":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
             z = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = ((x * y) + z) * w
             problem_string = f"(({x} x {y}) + {z}) x {w} = "
         elif problem_type == "compound_multiply_then_add_then_add":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
             z = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = ((x * y) + z) + w
             problem_string = f"(({x} x {y}) + {z}) + {w} = "
         elif problem_type == "compound_multiply_then_subtract_then_multiply":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
-            z = np.random.randint(low=lower_bound, high=x * y, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
+            z = np.random.randint(low=0, high=x * y, size=1)[0]
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = ((x * y) - z) * w
             problem_string = f"(({x} x {y}) - {z}) x {w} = "
         elif problem_type == "compound_multiply_then_subtract_then_add":
-            x, y  = np.random.randint(low=lower_bound, high=upper_bound//3, size=2)
-            z = np.random.randint(low=lower_bound, high=x * y, size=1)[0]
+            x, y = np.random.randint(low=lower_bound, high=upper_bound // 3, size=2)
+            z = np.random.randint(low=0, high=x * y, size=1)[0]
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = ((x * y) - z) + w
             problem_string = f"(({x} x {y}) - {z}) + {w} = "
         elif problem_type == "compound_subtract_then_add_then_multiply":
-            x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
-            w = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y, z = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=3),
+                reverse=True,
+            )
+            x = y + 1
+            w = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             solution = ((x - y) + z) * w
             problem_string = f"(({x} - {y}) + {z}) x {w} = "
         elif problem_type == "compound_subtract_then_add_then_subtract":
-            x, y, z  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=3), reverse = True)
-            w = np.random.randint(low=lower_bound, high=(x - y) + z, size=1)[0]
+            x, y, z = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=3),
+                reverse=True,
+            )
+            x = y + 1
+            w = np.random.randint(low=0, high=(x - y) + z, size=1)[0]
             solution = ((x - y) + z) - w
             problem_string = f"(({x} - {y}) + {z}) - {w} = "
         elif problem_type == "compound_subtract_then_multiply_then_add":
-            x, y  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse = True)
-            z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
+            x, y = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=2),
+                reverse=True,
+            )
+            x = y + 1
+            z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
             w = np.random.randint(low=lower_bound, high=upper_bound, size=1)[0]
             solution = ((x - y) * z) + w
             problem_string = f"(({x} - {y}) x {z}) + {w} = "
         elif problem_type == "compound_subtract_then_multiply_then_subtract":
-            x, y  = sorted(np.random.randint(low=lower_bound, high=upper_bound, size=2), reverse = True)
-            z = np.random.randint(low=lower_bound, high=upper_bound//3, size=1)[0]
-            w = np.random.randint(low=lower_bound, high=(x - y) * z, size=1)[0]
+            x, y = sorted(
+                np.random.randint(low=lower_bound, high=upper_bound, size=2),
+                reverse=True,
+            )
+            x = y + 1
+            z = np.random.randint(low=lower_bound, high=upper_bound // 3, size=1)[0]
+            w = np.random.randint(low=0, high=(x - y) * z, size=1)[0]
             solution = ((x - y) * z) - w
             problem_string = f"(({x} - {y}) x {z}) - {w} = "
         else:
             raise ValueError(f"Invalid problem type: {problem_type}")
 
-        return problem_string, solution
+        score = 1  # Base score for each problem
+        if problem_type.count("then") == 2:
+            score = 3
+        elif problem_type.count("then") == 1:
+            score = 2
+        
+        return problem_string, int(solution), score
 
     def check_answer(self, event=None):
         # Check user's answer, then update score and question
@@ -327,7 +390,7 @@ class UltraMac:
         )
         user_solution = self.entry_answer.get()
         if user_solution == str(self.solution):
-        # TODO implement more complex game logic for scoring, maybe based on problem difficulty
+            # TODO implement more complex game logic for scoring, maybe based on problem difficulty
             self.score += 1
             self.label_score.config(text=f"Score: {self.score}")
         self.update_problem()
@@ -429,6 +492,20 @@ def launch_game():
     else:
         print("You must provide a username. No username provided, so exiting.")
 
+# Use unittest to test generate_problem method, specifically making sure that the solution is always a non-negative integer
+class TestGenerateProblem(unittest.TestCase):
+    def setUp(self):
+        game_root = tk.Tk()  # Create a new root for the main game window
+        self.ultra_mac = UltraMac(username="tester", game_root=game_root)
+
+    def test_generate_problem(self):
+        for _ in range(10000): 
+            _, solution, _ = self.ultra_mac.generate_problem()
+            self.assertGreaterEqual(solution, 0, "Solution is negative")
+            self.assertIsInstance(solution, int, "Solution is not an integer")
+
 
 if __name__ == "__main__":
-    launch_game()
+    # used just for testing generate_problem method
+    unittest.main()
+    # launch_game()
