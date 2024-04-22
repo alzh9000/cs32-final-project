@@ -1,6 +1,6 @@
 # UltraMac
 ## How to run
-First, install `Python3` (UltraMac was built using `Python 3.9`, so to be safe use `Python 3.9` or later) and then `pip install` any packages that are imported at the top of `UltraMac.py` which you don't already have, likely `tkinter`, `numpy`, and/or `pandas`. Then, run `python3 UltraMac.py` in the terminal. When done, simply close the `Tkinter` window to quit. 
+First, install `Python3` (UltraMac was built using `Python 3.9`, so to be safe use `Python 3.9` or later) and then `pip install` any packages that are imported at the top of `UltraMac.py` which you don't already have, likely `numpy` and/or `pandas`. Then, run `python3 UltraMac.py` in the terminal. When done, simply close the `Tkinter` window to quit. 
 
 ## Description
 For my final project, I am building UltraMac, an upgraded version of an online speed math game/quizzer called ZetaMac. UltraMac is similarly designed to be a speed-focused math game that tests your quick mental math calculation skills on a variety of addition, multiplication, subtraction, division, and exponentiation problems. UltraMac is built to be run locally using `Python` and `Tkinter`. UltraMac generates random arithmetic problems to be solved (all with integer numbers and integer solutions), and a player's score is calculated based on the number and type of problems that they solve (harder types of problems reward more score per problem), then saved in a CSV file under that player's username. 
